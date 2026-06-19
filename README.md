@@ -1,4 +1,6 @@
-![Pertu MI Ai Logo](./src/app/logo.png)
+<p align="center">
+  <img src="./src/app/logo.png" alt="Pertu MI Ai Logo" width="200" />
+</p>
 
 # Pertu MI Ai
 
