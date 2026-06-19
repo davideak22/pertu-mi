@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <main className="relative flex flex-col items-center justify-center flex-1 min-h-screen px-6 py-24 overflow-hidden bg-bg-deep text-foreground">
+    <main className="relative flex flex-col items-center justify-center h-screen overflow-y-auto px-6 py-24 bg-bg-deep text-foreground">
       {/* Premium ambient glow background */}
       <div className="glow-backdrop" />
 

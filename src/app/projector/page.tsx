@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import { usePodcastChannel } from "@/hooks/usePodcastChannel";
 import { BroadcastPayload } from "@/types";
 
@@ -91,64 +92,114 @@ export default function ProjectorPage() {
         )}
       </button>
 
-      {/* State 1: Idle Ambient View */}
-      {payload.state === "idle" && (
-        <div className="relative z-10 text-center animate-pulse duration-[3000ms] flex flex-col items-center">
-          <div className="mb-4">
-            <Image
-              src="/logo.png"
-              alt="Pertu Mi Logo"
-              width={350}
-              height={120}
-              className="object-contain"
-              priority
-            />
-          </div>
-          <p className="mt-4 text-xs font-semibold tracking-[0.3em] text-slate-muted uppercase font-sans">
-            Awaiting Operator Feed
-          </p>
-        </div>
-      )}
+      {/* Screen layout anim transitions */}
+      <AnimatePresence mode="wait">
+        {/* State 1: Idle Ambient View */}
+        {payload.state === "idle" && (
+          <motion.div
+            key="idle"
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 text-center flex flex-col items-center"
+          >
+            {/* Floating Logo Animation */}
+            <motion.div
+              animate={{
+                y: [-8, 8, -8],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="mb-4 drop-shadow-[0_10px_20px_rgba(255,255,255,0.03)]"
+            >
+              <Image
+                src="/logo.png"
+                alt="Pertu Mi Logo"
+                width={350}
+                height={120}
+                className="object-contain"
+                priority
+              />
+            </motion.div>
+            
+            <motion.p
+              animate={{ opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="mt-4 text-xs font-semibold tracking-[0.3em] text-slate-muted uppercase font-sans"
+            >
+              Awaiting Operator Feed
+            </motion.p>
+          </motion.div>
+        )}
 
-      {/* State 2: Transitioning (Prompt Card Wipe-in Intro) */}
-      {payload.state === "transitioning" && (
-        <div className="relative z-10 w-full max-w-4xl px-8">
-          <div className="glass-panel p-12 rounded-3xl border border-slate-border shadow-2xl transition-all duration-500 scale-100 opacity-100">
-            <span className="text-xs font-bold tracking-[0.2em] text-indigo-primary uppercase block mb-3 font-sans">
-              Prompt Reference
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight font-sans">
-              {payload.promptText || "No prompt text provided."}
-            </h2>
-          </div>
-        </div>
-      )}
+        {/* State 2: Transitioning (Prompt Card Wipe-in Intro) */}
+        {payload.state === "transitioning" && (
+          <motion.div
+            key="transitioning"
+            initial={{ clipPath: "polygon(0 0, 0 0, 0 100%, 0 100%)", opacity: 0 }}
+            animate={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)", opacity: 1 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 w-full max-w-4xl px-8"
+          >
+            <motion.div
+              layoutId="prompt-card"
+              className="glass-panel p-12 rounded-3xl border border-slate-border shadow-2xl"
+            >
+              <span className="text-xs font-bold tracking-[0.2em] text-indigo-primary uppercase block mb-3 font-sans">
+                Prompt Reference
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight font-sans">
+                {payload.promptText || "No prompt text provided."}
+              </h2>
+            </motion.div>
+          </motion.div>
+        )}
 
-      {/* State 3: Typing (Prompt + Typewriter Response) */}
-      {payload.state === "typing" && (
-        <div className="relative z-10 w-full max-w-4xl px-8 flex flex-col gap-8">
-          {/* Prompt card minimised at top */}
-          <div className="glass-panel p-6 rounded-2xl border border-slate-border opacity-70">
-            <span className="text-[10px] font-bold tracking-[0.2em] text-slate-muted uppercase block mb-1 font-sans">
-              Prompt
-            </span>
-            <p className="text-lg font-bold text-white font-sans">
-              {payload.promptText || "No prompt text provided."}
-            </p>
-          </div>
+        {/* State 3: Typing (Prompt + Typewriter Response) */}
+        {payload.state === "typing" && (
+          <motion.div
+            key="typing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="relative z-10 w-full max-w-4xl px-8 flex flex-col gap-8"
+          >
+            {/* Prompt card minimised at top */}
+            <motion.div
+              layoutId="prompt-card"
+              className="glass-panel p-6 rounded-2xl border border-slate-border opacity-70"
+            >
+              <span className="text-[10px] font-bold tracking-[0.2em] text-slate-muted uppercase block mb-1 font-sans">
+                Prompt
+              </span>
+              <p className="text-lg font-bold text-white font-sans">
+                {payload.promptText || "No prompt text provided."}
+              </p>
+            </motion.div>
 
-          {/* Response Text typing out dynamically */}
-          <div className="glass-panel p-10 rounded-2xl border border-indigo-primary/20 shadow-[0_0_50px_hsla(var(--primary)/0.05)]">
-            <span className="text-xs font-bold tracking-[0.2em] text-accent-amber uppercase block mb-4 font-sans">
-              Response Transcript
-            </span>
-            <p className="text-xl sm:text-2xl font-medium leading-relaxed text-slate-200 font-mono whitespace-pre-wrap">
-              {typedResponse}
-              <span className="typewriter-cursor" />
-            </p>
-          </div>
-        </div>
-      )}
+            {/* Response Text typing out dynamically */}
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 70, damping: 14, delay: 0.2 }}
+              className="glass-panel p-10 rounded-2xl border border-indigo-primary/20 shadow-[0_0_50px_hsla(var(--primary)/0.05)]"
+            >
+              <span className="text-xs font-bold tracking-[0.2em] text-accent-amber uppercase block mb-4 font-sans">
+                Response Transcript
+              </span>
+              <p className="text-xl sm:text-2xl font-medium leading-relaxed text-slate-200 font-mono whitespace-pre-wrap">
+                {typedResponse}
+                <span className="typewriter-cursor" />
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

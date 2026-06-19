@@ -3,8 +3,33 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import { usePodcastChannel } from "@/hooks/usePodcastChannel";
 import { SystemState } from "@/types";
+
+interface DemoTemplate {
+  title: string;
+  prompt: string;
+  response: string;
+}
+
+const DEMO_TEMPLATES: DemoTemplate[] = [
+  {
+    title: "Sync Latency",
+    prompt: "Why is memory sync preferred over WebSockets for local dual-displays?",
+    response: "Native memory sync via the BroadcastChannel API transfers state payloads directly on the browser's local RAM bus, resolving in < 2ms latency. WebSockets introduce TCP stack roundtrips and require a running loopback server.",
+  },
+  {
+    title: "Chrome Occlusion",
+    prompt: "How do we prevent browser animation throttling in background tabs?",
+    response: "Navigate to chrome://flags/#calculate-native-win-occlusion in Google Chrome, select Disabled, and restart. This forces Chrome to render transitions at a locked 60fps, even when the window is clicked off-screen.",
+  },
+  {
+    title: "Camera Design",
+    prompt: "Why does the presenter canvas utilize a deep HSL slate scheme?",
+    response: "Standard white backgrounds cast severe glares on cameras and presenter faces. Pure black is visually flat. A deep, saturated slate theme (HSL 222/47%/5%) provides optimal contrast without casting reflective glares on set.",
+  }
+];
 
 export default function ControlPage() {
   const [promptText, setPromptText] = useState("");
@@ -69,8 +94,13 @@ export default function ControlPage() {
     });
   };
 
+  const loadTemplate = (template: DemoTemplate) => {
+    setPromptText(template.prompt);
+    setResponseText(template.response);
+  };
+
   return (
-    <main className="relative flex flex-col min-h-screen bg-bg-deep text-foreground font-sans">
+    <main className="relative flex flex-col h-screen overflow-y-auto bg-bg-deep text-foreground font-sans">
       <div className="glow-backdrop" />
 
       {/* Navigation Header */}
@@ -101,6 +131,23 @@ export default function ControlPage() {
         <div className="md:col-span-2 flex flex-col gap-6">
           <div className="p-6 rounded-2xl border border-slate-border bg-slate-panel/50 glass-panel">
             <h2 className="text-lg font-bold mb-4 text-white font-sans">Broadcast Inputs</h2>
+            
+            {/* Quick Templates Panel */}
+            <div className="mb-6 flex flex-wrap items-center gap-2.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-muted mr-1.5">
+                Load Demo:
+              </span>
+              {DEMO_TEMPLATES.map((tmpl) => (
+                <button
+                  key={tmpl.title}
+                  onClick={() => loadTemplate(tmpl)}
+                  className="px-3 py-1 text-xs font-medium rounded-md bg-slate-800 border border-slate-border text-slate-300 hover:text-indigo-primary hover:border-indigo-primary/40 transition-colors cursor-pointer"
+                >
+                  ⚡ {tmpl.title}
+                </button>
+              ))}
+            </div>
+
             <div className="flex flex-col gap-5">
               {/* Prompt input field */}
               <div className="flex flex-col gap-2">
@@ -112,7 +159,7 @@ export default function ControlPage() {
                   placeholder="e.g. Why is native browser memory sync faster than WebSockets?"
                   value={promptText}
                   onChange={(e) => setPromptText(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-slate-border bg-bg-deep text-white placeholder-slate-muted/50 focus:outline-none focus:border-indigo-primary focus:ring-1 focus:ring-indigo-primary transition-all font-sans"
+                  className="w-full px-4 py-3 rounded-lg border border-slate-border bg-bg-deep text-white placeholder-slate-muted/50 focus:outline-none focus:border-indigo-primary/80 focus:ring-1 focus:ring-indigo-primary/80 transition-all font-sans"
                 />
               </div>
 
@@ -126,7 +173,7 @@ export default function ControlPage() {
                   placeholder="e.g. It operates on the browser's local memory bus instead of traversing the TCP/IP stack or requesting external network servers..."
                   value={responseText}
                   onChange={(e) => setResponseText(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-slate-border bg-bg-deep text-white placeholder-slate-muted/50 focus:outline-none focus:border-indigo-primary focus:ring-1 focus:ring-indigo-primary transition-all font-mono resize-none"
+                  className="w-full px-4 py-3 rounded-lg border border-slate-border bg-bg-deep text-white placeholder-slate-muted/50 focus:outline-none focus:border-indigo-primary/80 focus:ring-1 focus:ring-indigo-primary/80 transition-all font-mono resize-none"
                 />
               </div>
             </div>
@@ -160,20 +207,29 @@ export default function ControlPage() {
                 <div className="flex items-center justify-between p-3 rounded-lg bg-bg-deep border border-slate-border">
                   <span className="text-sm text-slate-muted font-sans">Local Sync Bus</span>
                   <span className="flex items-center gap-2 text-xs font-semibold text-emerald-400 font-sans">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                     CONNECTED
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-lg bg-bg-deep border border-slate-border">
                   <span className="text-sm text-slate-muted font-sans">Active State</span>
-                  <span className={`px-2 py-0.5 text-xs font-bold rounded uppercase font-sans ${
-                    broadcastState === "idle" ? "bg-slate-700 text-slate-muted" :
-                    broadcastState === "transitioning" ? "bg-indigo-primary/20 text-indigo-primary" :
-                    "bg-accent-amber/20 text-accent-amber"
-                  }`}>
-                    {broadcastState}
-                  </span>
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={broadcastState}
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className={`px-2.5 py-0.5 text-xs font-bold rounded uppercase font-sans ${
+                        broadcastState === "idle" ? "bg-slate-700 text-slate-300" :
+                        broadcastState === "transitioning" ? "bg-indigo-primary/20 text-indigo-primary border border-indigo-primary/30" :
+                        "bg-accent-amber/20 text-accent-amber border border-accent-amber/30"
+                      }`}
+                    >
+                      {broadcastState}
+                    </motion.span>
+                  </AnimatePresence>
                 </div>
               </div>
 
