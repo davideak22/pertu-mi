@@ -1,8 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePodcastChannel } from "@/hooks/usePodcastChannel";
 import { SystemState } from "@/types";
@@ -107,13 +107,10 @@ export default function ControlPage() {
       <header className="relative z-10 flex items-center justify-between px-8 py-4 border-b border-slate-border glass-panel">
         <div className="flex items-center gap-3">
           <Link href="/" className="hover:opacity-80 transition-opacity">
-            <Image
+            <img
               src="/logo.png"
               alt="Pertu MI Logo"
-              width={100}
-              height={30}
               className="h-8 w-auto object-contain"
-              priority
             />
           </Link>
           <span className="px-2 py-0.5 text-xs font-semibold rounded bg-slate-border text-slate-muted font-sans">

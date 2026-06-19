@@ -5,6 +5,12 @@ const CHANNEL_NAME = "pertu_mi_production_stream";
 
 export function usePodcastChannel(onMessage?: (data: BroadcastPayload) => void) {
   const channelRef = useRef<BroadcastChannel | null>(null);
+  const onMessageRef = useRef(onMessage);
+
+  // Keep callback ref updated with the latest handler
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -13,11 +19,11 @@ export function usePodcastChannel(onMessage?: (data: BroadcastPayload) => void) 
       const channel = new BroadcastChannel(CHANNEL_NAME);
       channelRef.current = channel;
 
-      if (onMessage) {
-        channel.onmessage = (event: MessageEvent<BroadcastPayload>) => {
-          onMessage(event.data);
-        };
-      }
+      channel.onmessage = (event: MessageEvent<BroadcastPayload>) => {
+        if (onMessageRef.current) {
+          onMessageRef.current(event.data);
+        }
+      };
 
       channel.onmessageerror = (err) => {
         console.error("Broadcast Channel deserialization error:", err);
@@ -32,7 +38,7 @@ export function usePodcastChannel(onMessage?: (data: BroadcastPayload) => void) 
         channelRef.current.close();
       }
     };
-  }, [onMessage]);
+  }, []);
 
   const broadcast = useCallback((payload: Omit<BroadcastPayload, "timestamp">) => {
     if (channelRef.current) {

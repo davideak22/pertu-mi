@@ -1,5 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import Image from "next/image";
 
 export default function Home() {
   return (
@@ -10,13 +10,10 @@ export default function Home() {
       <div className="relative z-10 w-full max-w-4xl mx-auto text-center flex flex-col items-center">
         {/* Animated Brand Header */}
         <div className="mb-6 hover:scale-[1.02] transition-transform duration-300">
-          <Image
+          <img
             src="/logo.png"
             alt="Pertu MI Logo"
-            width={280}
-            height={100}
-            priority
-            className="object-contain"
+            className="w-[280px] h-auto object-contain"
           />
         </div>
         <p className="max-w-2xl mx-auto text-lg sm:text-xl text-slate-muted mb-12">

@@ -1,7 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePodcastChannel } from "@/hooks/usePodcastChannel";
 import { BroadcastPayload } from "@/types";
@@ -14,13 +15,16 @@ export default function ProjectorPage() {
     timestamp: 0,
   });
   
-  const [typedResponse, setTypedResponse] = useState("");
+  const [typedLength, setTypedLength] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Compute sliced text for presentation
+  const typedResponse = (payload.responseText || "").slice(0, typedLength);
 
   // Listen to the shared broadcast channel
   usePodcastChannel((data) => {
     setPayload(data);
-    setTypedResponse(""); // Reset typed text on new broadcast message receipt
+    setTypedLength(0); // Reset typed count on new broadcast receipt
   });
 
   // Track browser fullscreen changes
@@ -41,16 +45,16 @@ export default function ProjectorPage() {
       return;
     }
 
-    let index = 0;
-    const text = payload.responseText;
+    const targetLength = payload.responseText.length;
     
     const intervalId = setInterval(() => {
-      setTypedResponse((prev) => prev + text.charAt(index));
-      index++;
-      
-      if (index >= text.length) {
+      setTypedLength((prev) => {
+        if (prev < targetLength) {
+          return prev + 1;
+        }
         clearInterval(intervalId);
-      }
+        return prev;
+      });
     }, 25); // 25ms character output speed
 
     return () => clearInterval(intervalId);
@@ -71,7 +75,7 @@ export default function ProjectorPage() {
   };
 
   return (
-    <main className="projector-canvas relative w-screen h-screen overflow-hidden flex flex-col items-center justify-center bg-bg-deep text-foreground select-none">
+    <main className="projector-canvas relative w-screen h-screen overflow-hidden flex flex-col items-center justify-between py-10 bg-bg-deep text-foreground select-none">
       {/* Background neon ambient glow */}
       <div className="glow-backdrop" />
 
@@ -92,114 +96,146 @@ export default function ProjectorPage() {
         )}
       </button>
 
-      {/* Screen layout anim transitions */}
-      <AnimatePresence mode="wait">
-        {/* State 1: Idle Ambient View */}
-        {payload.state === "idle" && (
-          <motion.div
-            key="idle"
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 text-center flex flex-col items-center"
-          >
-            {/* Floating Logo Animation */}
+      {/* Persistent Brand Header on Active States */}
+      <div className="h-20 w-full flex items-center justify-center relative z-20">
+        <AnimatePresence>
+          {payload.state !== "idle" && (
             <motion.div
-              animate={{
-                y: [-8, 8, -8],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="mb-4 drop-shadow-[0_10px_20px_rgba(255,255,255,0.03)]"
+              key="active-logo"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 0.85, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col items-center"
             >
-              <Image
+              <img
                 src="/logo.png"
                 alt="Pertu Mi Logo"
-                width={350}
-                height={120}
-                className="object-contain"
-                priority
+                className="w-[260px] h-auto object-contain"
               />
             </motion.div>
-            
-            <motion.p
-              animate={{ opacity: [0.4, 0.8, 0.4] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="mt-4 text-xs font-semibold tracking-[0.3em] text-slate-muted uppercase font-sans"
-            >
-              Awaiting Operator Feed
-            </motion.p>
-          </motion.div>
-        )}
+          )}
+        </AnimatePresence>
+      </div>
 
-        {/* State 2: Transitioning (Prompt Card Wipe-in Intro) */}
-        {payload.state === "transitioning" && (
-          <motion.div
-            key="transitioning"
-            initial={{ clipPath: "polygon(0 0, 0 0, 0 100%, 0 100%)", opacity: 0 }}
-            animate={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)", opacity: 1 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 w-full max-w-4xl px-8"
-          >
+      {/* Screen layout anim transitions */}
+      <div className="flex-1 w-full flex items-center justify-center relative z-10 overflow-hidden">
+        <AnimatePresence mode="wait">
+          {/* State 1: Idle Ambient View */}
+          {payload.state === "idle" && (
             <motion.div
-              layoutId="prompt-card"
-              className="glass-panel p-12 rounded-3xl border border-slate-border shadow-2xl"
+              key="idle"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="text-center flex flex-col items-center"
             >
-              <span className="text-xs font-bold tracking-[0.2em] text-indigo-primary uppercase block mb-3 font-sans">
-                Prompt Reference
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight font-sans">
-                {payload.promptText || "No prompt text provided."}
-              </h2>
+              {/* Floating Logo Animation */}
+              <motion.div
+                animate={{
+                  y: [-8, 8, -8],
+                }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="mb-4 drop-shadow-[0_10px_20px_rgba(255,255,255,0.03)]"
+              >
+                <img
+                  src="/logo.png"
+                  alt="Pertu Mi Logo"
+                  className="w-[350px] h-auto object-contain"
+                />
+              </motion.div>
+              
+              <motion.p
+                animate={{ opacity: [0.4, 0.8, 0.4] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="mt-4 text-xs font-semibold tracking-[0.3em] text-slate-muted uppercase font-sans"
+              >
+                Awaiting Operator Feed
+              </motion.p>
             </motion.div>
-          </motion.div>
-        )}
+          )}
 
-        {/* State 3: Typing (Prompt + Typewriter Response) */}
-        {payload.state === "typing" && (
-          <motion.div
-            key="typing"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            className="relative z-10 w-full max-w-4xl px-8 flex flex-col gap-8"
-          >
-            {/* Prompt card minimised at top */}
+          {/* State 2: Transitioning (Prompt Card Wipe-in Intro) */}
+          {payload.state === "transitioning" && (
             <motion.div
-              layoutId="prompt-card"
-              className="glass-panel p-6 rounded-2xl border border-slate-border opacity-70"
+              key="transitioning"
+              initial={{ clipPath: "polygon(0 0, 0 0, 0 100%, 0 100%)", opacity: 0 }}
+              animate={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)", opacity: 1 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-6xl px-8"
             >
-              <span className="text-[10px] font-bold tracking-[0.2em] text-slate-muted uppercase block mb-1 font-sans">
-                Prompt
-              </span>
-              <p className="text-lg font-bold text-white font-sans">
-                {payload.promptText || "No prompt text provided."}
-              </p>
+              <motion.div
+                layoutId="prompt-card"
+                className="glass-panel p-16 md:p-20 rounded-3xl border border-slate-border shadow-2xl"
+              >
+                <span className="text-sm md:text-base font-bold tracking-[0.25em] text-indigo-primary uppercase block mb-4 font-sans">
+                  Prompt Reference
+                </span>
+                <h2 className="text-4xl sm:text-6xl md:text-7xl font-black text-white leading-tight font-sans">
+                  {payload.promptText || "No prompt text provided."}
+                </h2>
+              </motion.div>
             </motion.div>
+          )}
 
-            {/* Response Text typing out dynamically */}
+          {/* State 3: Typing (Prompt + Typewriter Response) */}
+          {payload.state === "typing" && (
             <motion.div
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 70, damping: 14, delay: 0.2 }}
-              className="glass-panel p-10 rounded-2xl border border-indigo-primary/20 shadow-[0_0_50px_hsla(var(--primary)/0.05)]"
+              key="typing"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="w-full max-w-6xl px-8 flex flex-col gap-10"
             >
-              <span className="text-xs font-bold tracking-[0.2em] text-accent-amber uppercase block mb-4 font-sans">
-                Response Transcript
-              </span>
-              <p className="text-xl sm:text-2xl font-medium leading-relaxed text-slate-200 font-mono whitespace-pre-wrap">
-                {typedResponse}
-                <span className="typewriter-cursor" />
-              </p>
+              {/* Prompt card minimised at top */}
+              <motion.div
+                layoutId="prompt-card"
+                className="glass-panel p-8 md:p-10 rounded-2xl border border-slate-border opacity-70"
+              >
+                <span className="text-xs md:text-sm font-bold tracking-[0.2em] text-slate-muted uppercase block mb-2 font-sans">
+                  Prompt
+                </span>
+                <p className="text-2xl md:text-3xl font-extrabold text-white font-sans leading-snug">
+                  {payload.promptText || "No prompt text provided."}
+                </p>
+              </motion.div>
+
+              {/* Response Text typing out dynamically */}
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 70, damping: 14, delay: 0.2 }}
+                className="glass-panel p-14 md:p-16 rounded-2xl border border-indigo-primary/20 shadow-[0_0_50px_hsla(var(--primary)/0.05)]"
+              >
+                <span className="text-sm md:text-base font-bold tracking-[0.2em] text-accent-amber uppercase block mb-4 font-sans">
+                  Response Transcript
+                </span>
+                <div className="text-2xl sm:text-4xl md:text-5xl font-semibold leading-relaxed text-slate-200 font-mono whitespace-pre-wrap">
+                  <div className="markdown-content inline-block">
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => <span className="inline">{children}</span>,
+                      }}
+                    >
+                      {typedResponse}
+                    </ReactMarkdown>
+                    <span className="typewriter-cursor" />
+                  </div>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Bottom Spacer Area for visual balance */}
+      <div className="h-20 w-full" />
     </main>
   );
 }
