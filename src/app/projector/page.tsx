@@ -36,11 +36,11 @@ function injectCursor(children: ReactNode, isTypingComplete: boolean): ReactNode
     if (children.includes("[CURSOR]")) {
       const parts = children.split("[CURSOR]");
       return (
-        <>
+        <React.Fragment key="typewriter-cursor-fragment">
           {parts[0]}
           <span className="typewriter-cursor" />
           {parts[1]}
-        </>
+        </React.Fragment>
       );
     }
     return children;
