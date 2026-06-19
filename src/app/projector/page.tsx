@@ -203,26 +203,43 @@ export default function ProjectorPage() {
                       : "p-6 md:p-8 rounded-2xl rounded-br-none opacity-80"
                   }`}
                 >
-                  <motion.span
-                    layout
-                    className={`font-bold tracking-[0.2em] uppercase block mb-2 font-sans ${
-                      payload.state === "transitioning"
-                        ? "text-sm md:text-base text-indigo-primary"
-                        : "text-xs text-slate-muted"
-                    }`}
-                  >
-                    {payload.state === "transitioning" ? "Prompt Reference" : "Prompt"}
-                  </motion.span>
-                  <motion.p
-                    layout
-                    className={`font-extrabold text-white leading-snug font-sans ${
-                      payload.state === "transitioning"
-                        ? "text-5xl sm:text-6xl md:text-7xl lg:text-8xl"
-                        : "text-3xl sm:text-4xl md:text-5xl"
-                    }`}
-                  >
-                    {payload.promptText || "No prompt text provided."}
-                  </motion.p>
+                  <div className="relative w-full">
+                    {/* Large Intro Text (Transitioning State) */}
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{
+                        opacity: payload.state === "transitioning" ? 1 : 0,
+                        y: payload.state === "transitioning" ? 0 : -10,
+                      }}
+                      transition={{ duration: 0.4, ease: "easeInOut" }}
+                      className={payload.state === "transitioning" ? "w-full" : "absolute inset-x-0 top-0 pointer-events-none"}
+                    >
+                      <span className="font-bold tracking-[0.2em] uppercase block mb-2 font-sans text-sm md:text-base text-indigo-primary">
+                        Prompt Reference
+                      </span>
+                      <p className="font-extrabold text-white leading-snug font-sans text-5xl sm:text-6xl md:text-7xl lg:text-8xl">
+                        {payload.promptText || "No prompt text provided."}
+                      </p>
+                    </motion.div>
+
+                    {/* Small Minimized Text (Typing State) */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{
+                        opacity: payload.state === "typing" ? 1 : 0,
+                        y: payload.state === "typing" ? 0 : 10,
+                      }}
+                      transition={{ duration: 0.4, ease: "easeInOut" }}
+                      className={payload.state === "typing" ? "w-full" : "absolute inset-x-0 top-0 pointer-events-none"}
+                    >
+                      <span className="font-bold tracking-[0.2em] uppercase block mb-2 font-sans text-xs text-slate-muted">
+                        Prompt
+                      </span>
+                      <p className="font-extrabold text-white leading-snug font-sans text-3xl sm:text-4xl md:text-5xl">
+                        {payload.promptText || "No prompt text provided."}
+                      </p>
+                    </motion.div>
+                  </div>
                 </motion.div>
               </div>
 
