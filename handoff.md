@@ -1,6 +1,6 @@
 # Handoff Documentation — Pertu MI Ai
 
-This document provides a comprehensive handover guide for developers or AI agents taking over the **Pertu MI Ai** codebase.
+This document provides a comprehensive handover guide for developers or AI agents taking over the **Pertu MI Ai** codebase. It outlines the system architecture, code organization, layout mechanics, and the recently implemented typewriter timing and fullscreen toggle behaviors.
 
 ---
 
@@ -66,31 +66,32 @@ graph TD
 
 ---
 
-## ⚡ Recent Optimizations & Bug Fixes
+## ⚡ Recent Optimizations & Timing Upgrades
 
-1. **Seamless Presentation View & Shared Morphing**
-   - Merged `transitioning` (prompt intro) and `typing` states under a single parent layout container (`key="session"`) inside the `<AnimatePresence>` tree. This keeps the prompt card mounted during state changes.
-   - Added Framer Motion's physics-based spring `layout` prop to the prompt card `motion.div` to smoothly animate position, rounding, and padding shifts during state swaps.
+### 1. Paced Typewriter Response Writer
+The typewriter response animation uses a **continuous linear acceleration curve** that mimics shifting gears (walking -> running -> riding a bike -> driving a car -> bullet train -> flying). This resolves the waiting time for long responses while ensuring that the start is readable and comfortable to read.
 
-2. **Crossfading Text Sizing & Stretching Prevention**
-   - Separated the prompt card text into two distinct container divs (large-font intro and small-font minimized containers).
-   - Animated their opacities and translation offsets (`opacity` and `y` offsets) to crossfade smoothly over 0.4 seconds.
-   - Set the inactive container to `absolute` positioning, allowing the parent card bounding box to calculate height and width based solely on the active element.
-   - Applied `layout="position"` to the inner content wrapper and the text container motion nodes. This forces Framer Motion to counter-scale nested content, completely resolving stretching and squashing distortion of letters while the card container resizes.
-   - Removed conflicting CSS `transition-all duration-500` classes to prevent browser font reflow stutters.
-   - Aligned card width constraints to a matching `w-full max-w-[85%]` in both states to preserve text wrap boundaries.
+- **Initial legible pace:** Locks at exactly `1 character per tick` for the first `40 ticks` (~3.0 seconds) with a slow `90ms` initial delay.
+- **Continuous acceleration:** Starting at tick 40, the step size increases gradually by `1 character every 60 ticks`:
+  $$\text{charsToAdd} = \lfloor 1 + \frac{\text{ticks} - 40}{60} \rfloor$$
+- **Delay decay:** The tick delay decreases slowly by `0.4ms` per tick, decaying from `90ms` down to a minimum of `15ms`.
+- **Speed Phases:**
+  - **🚶 Walking (ticks 0-60):** Delay 90ms down to 66ms, step = 1. (11 to 15 chars/sec)
+  - **🏃 Running (ticks 60-100):** Delay 66ms down to 50ms, step = 1. (15 to 20 chars/sec)
+  - **🚲 Riding a Bike (ticks 100-160):** Delay 50ms down to 26ms, step = 2. (40 to 76 chars/sec)
+  - **🚗 Driving a Car (ticks 160-220):** Delay 26ms down to 15ms, step = 3. (115 to 200 chars/sec)
+  - **🚄 Bullet Train (ticks 220-280):** Delay 15ms, step = 4. (266 chars/sec)
+  - **✈️ Flying (ticks 280+):** Delay 15ms, step = 5+. (333+ chars/sec)
+- **StrictMode Protection:** Built on a recursive `setTimeout` loop using local mutable length variables (`currentLength`, `ticks`) to ensure React StrictMode double-execution does not double typing speeds in development.
 
-3. **Sequential Animation & Timer Offsets**
-   - Shortened the control panel transition timer delay from `3500ms` to `3000ms` (3 seconds), causing the large text to fade out and morph 500ms earlier.
-   - Introduced a `setTimeout` inside the projector's typewriter hook to delay printing by `500ms` after transitioning to the typing state.
-   - This sequential timing ensures the prompt card completes its resize and morph to the top-right corner *before* typewriter typing commences, creating a much cleaner, less busy visual path.
+### 2. Auto-Hiding Fullscreen Button
+- Modified the glassmorphic fullscreen toggle button on `/projector` to only render when the browser window is not in fullscreen mode (`!isFullscreen`).
+- When the page enters fullscreen, the button disappears to clear visual clutter for broadcasting.
+- Standard exits (e.g., pressing `Esc`) trigger the document `fullscreenchange` event handler, which updates states and makes the button reappear instantly.
 
-4. **Static White ChatGPT SVG Asset**
-   - Modified `public/chatgpt.svg` to include a `fill='#FFFFFF'` path attribute, ensuring the brand logo displays in clean high-contrast white on the dark presenter screen.
-
-5. **Logo Corner Relocation & Overlap Prevention**
-   - Active state brand logos are absolutely positioned in the upper-left corner (`absolute top-8 left-8 z-30`).
-   - Content does not overlap or collide with branding graphics during presentation.
+### 3. Layout Morphing and Crossfades
+- Shared layout morphing keeps the Prompt Card mounted during transition-to-typing state swaps, resizing it smoothly using Framer Motion springs.
+- Integrated opacity and translation crossfades for card text container overlays to resolve letter distortion, line reflow snaps, and parent scale stretching.
 
 ---
 
@@ -99,9 +100,3 @@ graph TD
 - `npm run lint` — Perform code linting checks.
 - `npx tsc --noEmit` — Run TypeScript type audits.
 - `npm run build` — Compile Next.js production builds.
-
----
-
-## 📈 Future Roadmaps & Recommendations
-- **Background Throttling Optimization**: For dual-screen studio setups, remember to run macOS Chrome with native win-occlusion flags disabled (`chrome://flags/#calculate-native-win-occlusion`) so background tabs run at a smooth 60fps.
-- **Audio Prompts**: Integrating native Web Speech Synthesizer features to read prompts aloud when state transitions occur.
