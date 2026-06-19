@@ -11,6 +11,8 @@ interface DemoTemplate {
   title: string;
   prompt: string;
   response: string;
+  model: "ChatGPT" | "Claude" | "Gemini" | "Other";
+  customModel?: string;
 }
 
 const DEMO_TEMPLATES: DemoTemplate[] = [
@@ -18,16 +20,19 @@ const DEMO_TEMPLATES: DemoTemplate[] = [
     title: "Sync Latency",
     prompt: "Why is memory sync preferred over WebSockets for local dual-displays?",
     response: "Native memory sync via the BroadcastChannel API transfers state payloads directly on the browser's local RAM bus, resolving in < 2ms latency. WebSockets introduce TCP stack roundtrips and require a running loopback server.",
+    model: "ChatGPT",
   },
   {
     title: "Chrome Occlusion",
     prompt: "How do we prevent browser animation throttling in background tabs?",
     response: "Navigate to chrome://flags/#calculate-native-win-occlusion in Google Chrome, select Disabled, and restart. This forces Chrome to render transitions at a locked 60fps, even when the window is clicked off-screen.",
+    model: "Claude",
   },
   {
     title: "Camera Design",
     prompt: "Why does the presenter canvas utilize a deep HSL slate scheme?",
     response: "Standard white backgrounds cast severe glares on cameras and presenter faces. Pure black is visually flat. A deep, saturated slate theme (HSL 222/47%/5%) provides optimal contrast without casting reflective glares on set.",
+    model: "Gemini",
   }
 ];
 
@@ -35,6 +40,8 @@ export default function ControlPage() {
   const [promptText, setPromptText] = useState("");
   const [responseText, setResponseText] = useState("");
   const [broadcastState, setBroadcastState] = useState<SystemState>("idle");
+  const [selectedModel, setSelectedModel] = useState<"ChatGPT" | "Claude" | "Gemini" | "Other">("ChatGPT");
+  const [customModelName, setCustomModelName] = useState("");
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -57,12 +64,15 @@ export default function ControlPage() {
       timerRef.current = null;
     }
 
+    const modelName = selectedModel === "Other" ? customModelName : selectedModel;
+
     // 1. Instantly trigger prompt transition state
     setBroadcastState("transitioning");
     broadcast({
       state: "transitioning",
       promptText,
       responseText,
+      modelName,
     });
 
     // 2. Set timer to automatically transition to typewriter typing state after 1500ms
@@ -72,6 +82,7 @@ export default function ControlPage() {
         state: "typing",
         promptText,
         responseText,
+        modelName,
       });
       timerRef.current = null;
     }, 1500);
@@ -87,16 +98,21 @@ export default function ControlPage() {
     setBroadcastState("idle");
     setPromptText("");
     setResponseText("");
+    setSelectedModel("ChatGPT");
+    setCustomModelName("");
     broadcast({
       state: "idle",
       promptText: "",
       responseText: "",
+      modelName: "ChatGPT",
     });
   };
 
   const loadTemplate = (template: DemoTemplate) => {
     setPromptText(template.prompt);
     setResponseText(template.response);
+    setSelectedModel(template.model);
+    setCustomModelName(template.customModel || "");
   };
 
   return (
@@ -158,6 +174,43 @@ export default function ControlPage() {
                   onChange={(e) => setPromptText(e.target.value)}
                   className="w-full px-4 py-3 rounded-lg border border-slate-border bg-bg-deep text-white placeholder-slate-muted/50 focus:outline-none focus:border-indigo-primary/80 focus:ring-1 focus:ring-indigo-primary/80 transition-all font-sans"
                 />
+              </div>
+
+              {/* AI Model Selector */}
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold tracking-wider uppercase text-slate-muted font-sans">
+                  AI Model Reference
+                </label>
+                <div className="flex flex-wrap gap-2.5">
+                  {(["ChatGPT", "Claude", "Gemini", "Other"] as const).map((model) => (
+                    <button
+                      key={model}
+                      type="button"
+                      onClick={() => setSelectedModel(model)}
+                      className={`px-4 py-2.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                        selectedModel === model
+                          ? "bg-indigo-primary/25 border-indigo-primary text-white shadow-[0_0_15px_hsla(var(--primary)/0.25)]"
+                          : "bg-slate-800/40 border-slate-border text-slate-muted hover:text-white"
+                      }`}
+                    >
+                      {model === "ChatGPT" && "🟢 "}
+                      {model === "Claude" && "🟠 "}
+                      {model === "Gemini" && "🔵 "}
+                      {model === "Other" && "🤖 "}
+                      {model}
+                    </button>
+                  ))}
+                </div>
+                
+                {selectedModel === "Other" && (
+                  <input
+                    type="text"
+                    placeholder="Enter custom model name (e.g. DeepSeek-R1)"
+                    value={customModelName}
+                    onChange={(e) => setCustomModelName(e.target.value)}
+                    className="w-full px-4 py-2.5 mt-1 rounded-lg border border-slate-border bg-bg-deep text-white placeholder-slate-muted/50 focus:outline-none focus:border-indigo-primary/80 focus:ring-1 focus:ring-indigo-primary/80 transition-all font-sans text-sm"
+                  />
+                )}
               </div>
 
               {/* Response text area */}
