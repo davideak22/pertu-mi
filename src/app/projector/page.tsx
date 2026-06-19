@@ -69,18 +69,34 @@ export default function ProjectorPage() {
     }
 
     const targetLength = payload.responseText.length;
+    let ticks = 0;
+    let currentLength = 0;
+    let timeoutId: NodeJS.Timeout;
     
-    const intervalId = setInterval(() => {
-      setTypedLength((prev) => {
-        if (prev < targetLength) {
-          return prev + 1;
-        }
-        clearInterval(intervalId);
-        return prev;
-      });
-    }, 25); // 25ms character output speed
+    const tick = () => {
+      // Delay starts at 90ms and decreases very slowly by 0.4ms per tick to a 15ms minimum
+      const delay = Math.max(15, 90 - ticks * 0.4);
+      
+      // Continuous linear acceleration curve:
+      // Holds at 1 char/tick for the first 40 ticks (walking -> running),
+      // then transitions gradually to bike, car, bullet train, and flight (ticks 40+)
+      // Step size increases by 1 character every 60 ticks (50% slower acceleration)
+      const accelerationTicks = Math.max(0, ticks - 40);
+      const charsToAdd = Math.floor(1 + accelerationTicks / 60);
+      
+      ticks++;
+      currentLength = Math.min(targetLength, currentLength + charsToAdd);
+      setTypedLength(currentLength);
 
-    return () => clearInterval(intervalId);
+      if (currentLength < targetLength) {
+        timeoutId = setTimeout(tick, delay);
+      }
+    };
+
+    // Start typewriter loop
+    timeoutId = setTimeout(tick, 90);
+
+    return () => clearTimeout(timeoutId);
   }, [payload.state, payload.responseText, payload.timestamp]);
 
   const toggleFullscreen = async () => {
@@ -103,21 +119,17 @@ export default function ProjectorPage() {
       <div className="glow-backdrop" />
 
       {/* Floating Fullscreen Toggle Button */}
-      <button
-        onClick={toggleFullscreen}
-        className="absolute top-6 right-6 z-50 p-2.5 rounded-xl glass-panel border border-slate-border text-slate-muted hover:text-white transition-all cursor-pointer opacity-15 hover:opacity-100 flex items-center justify-center shadow-lg"
-        title={isFullscreen ? "Exit Fullscreen Mode" : "Enter Fullscreen Mode"}
-      >
-        {isFullscreen ? (
+      {!isFullscreen && (
+        <button
+          onClick={toggleFullscreen}
+          className="absolute top-6 right-6 z-50 p-2.5 rounded-xl glass-panel border border-slate-border text-slate-muted hover:text-white transition-all cursor-pointer opacity-15 hover:opacity-100 flex items-center justify-center shadow-lg"
+          title="Enter Fullscreen Mode"
+        >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9V4.5M15 9h4.5M15 9l5.25-5.25M15 15v4.5M15 15h4.5M15 15l5.25 5.25" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h-4.5m-4.5 0L9 15M20.25 3.75v-4.5m0 4.5h-4.5m4.5 0L15 9m5.25 11.25v-4.5m0 4.5h-4.5m4.5 0L15 15" />
           </svg>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v-4.5m0 4.5h-4.5m4.5 0L15 9m5.25 11.25v-4.5m0 4.5h-4.5m4.5 0L15 15" />
-          </svg>
-        )}
-      </button>
+        </button>
+      )}
 
       {/* Persistent Brand Header on Active States - Top Left Corner */}
       <div className="absolute top-8 left-8 z-30">
