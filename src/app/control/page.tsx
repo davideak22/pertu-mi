@@ -75,7 +75,7 @@ export default function ControlPage() {
       modelName,
     });
 
-    // 2. Set timer to automatically transition to typewriter typing state after 1500ms
+    // 2. Set timer to automatically transition to typewriter typing state after 3500ms (3.5 seconds)
     timerRef.current = setTimeout(() => {
       setBroadcastState("typing");
       broadcast({
@@ -85,7 +85,7 @@ export default function ControlPage() {
         modelName,
       });
       timerRef.current = null;
-    }, 1500);
+    }, 3500);
   };
 
   const handleReset = () => {

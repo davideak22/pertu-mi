@@ -42,6 +42,7 @@ export default function ProjectorPage() {
 
   // Compute sliced text for presentation
   const typedResponse = (payload.responseText || "").slice(0, typedLength);
+  const isTypingComplete = typedLength >= (payload.responseText || "").length;
 
   // Listen to the shared broadcast channel
   usePodcastChannel((data) => {
@@ -181,90 +182,91 @@ export default function ProjectorPage() {
             </motion.div>
           )}
 
-          {/* State 2: Transitioning (Prompt Card Wipe-in Intro) */}
-          {payload.state === "transitioning" && (
+          {/* Combined Session View: Active Presentation (Transitioning & Typing) */}
+          {payload.state !== "idle" && (
             <motion.div
-              key="transitioning"
-              initial={{ clipPath: "polygon(0 0, 0 0, 0 100%, 0 100%)", opacity: 0 }}
-              animate={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)", opacity: 1 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-6xl px-8 flex justify-end"
-            >
-              <motion.div
-                layoutId="prompt-card"
-                className="glass-panel p-10 md:p-12 rounded-3xl rounded-br-none border border-slate-border shadow-2xl max-w-[75%]"
-              >
-                <span className="text-sm md:text-base font-bold tracking-[0.25em] text-indigo-primary uppercase block mb-4 font-sans">
-                  Prompt Reference
-                </span>
-                <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-tight font-sans">
-                  {payload.promptText || "No prompt text provided."}
-                </h2>
-              </motion.div>
-            </motion.div>
-          )}
-
-          {/* State 3: Typing (Prompt + Typewriter Response) */}
-          {payload.state === "typing" && (
-            <motion.div
-              key="typing"
+              key="session"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              className="w-full max-w-6xl px-8 flex flex-col gap-10"
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-[90vw] px-8 flex flex-col gap-10"
             >
-              {/* Prompt card minimised at top right (ChatGPT user bubble style) */}
+              {/* Prompt Card */}
               <div className="w-full flex justify-end">
                 <motion.div
-                  layoutId="prompt-card"
-                  className="glass-panel p-6 md:p-8 rounded-2xl rounded-br-none border border-slate-border opacity-80 max-w-[70%] shadow-lg"
+                  layout
+                  transition={{ type: "spring", stiffness: 85, damping: 17 }}
+                  className={`glass-panel border border-slate-border shadow-2xl transition-all duration-500 ${
+                    payload.state === "transitioning"
+                      ? "p-10 md:p-12 rounded-3xl rounded-br-none max-w-[85%] w-full"
+                      : "p-6 md:p-8 rounded-2xl rounded-br-none opacity-80 max-w-[85%]"
+                  }`}
                 >
-                  <span className="text-xs font-bold tracking-[0.2em] text-slate-muted uppercase block mb-2 font-sans">
-                    Prompt
-                  </span>
-                  <p className="text-2xl md:text-3xl font-extrabold text-white font-sans leading-snug">
+                  <motion.span
+                    layout
+                    className={`font-bold tracking-[0.2em] uppercase block mb-2 font-sans transition-all duration-500 ${
+                      payload.state === "transitioning"
+                        ? "text-sm md:text-base text-indigo-primary"
+                        : "text-xs text-slate-muted"
+                    }`}
+                  >
+                    {payload.state === "transitioning" ? "Prompt Reference" : "Prompt"}
+                  </motion.span>
+                  <motion.p
+                    layout
+                    className={`font-extrabold text-white leading-snug font-sans transition-all duration-500 ${
+                      payload.state === "transitioning"
+                        ? "text-5xl sm:text-6xl md:text-7xl lg:text-8xl"
+                        : "text-3xl sm:text-4xl md:text-5xl"
+                    }`}
+                  >
                     {payload.promptText || "No prompt text provided."}
-                  </p>
+                  </motion.p>
                 </motion.div>
               </div>
 
-              {/* Response row: Left avatar column, right transcript bubble column */}
-              <div className="w-full flex justify-start items-start gap-4 md:gap-6">
-                {/* Round Avatar Indicator */}
-                <div className="w-14 h-14 rounded-full bg-slate-800/80 border border-slate-border flex items-center justify-center flex-shrink-0 shadow-xl relative overflow-hidden backdrop-blur-md">
-                  {renderModelIcon(payload.modelName)}
-                </div>
-
-                {/* Response Card content bubble (ChatGPT model response style) */}
-                <motion.div
-                  initial={{ y: 30, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 70, damping: 14, delay: 0.2 }}
-                  className="flex-1 glass-panel p-12 md:p-14 rounded-3xl rounded-bl-none border border-indigo-primary/20 shadow-[0_0_60px_hsla(var(--primary)/0.04)]"
-                >
-                  <div className="flex items-center gap-3 mb-4 border-b border-slate-border/30 pb-3">
-                    <span className="text-sm font-bold tracking-[0.2em] text-accent-amber uppercase font-sans">
-                      {payload.modelName || "AI Assistant"}
-                    </span>
-                    <span className="px-2 py-0.5 text-[10px] font-black rounded-md bg-indigo-primary/20 text-indigo-primary uppercase font-sans border border-indigo-primary/30">
-                      Response
-                    </span>
-                  </div>
-                  <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold leading-relaxed text-slate-200 font-mono whitespace-pre-wrap">
-                    <div className="markdown-content inline-block">
-                      <ReactMarkdown
-                        components={{
-                          p: ({ children }) => <span className="inline">{children}</span>,
-                        }}
-                      >
-                        {typedResponse}
-                      </ReactMarkdown>
-                      <span className="typewriter-cursor" />
+              {/* Response Section */}
+              <AnimatePresence>
+                {payload.state === "typing" && (
+                  <motion.div
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 30, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 70, damping: 14, delay: 0.2 }}
+                    className="w-full flex justify-start items-start gap-4 md:gap-6"
+                  >
+                    {/* Round Avatar Indicator */}
+                    <div className="w-14 h-14 rounded-full bg-slate-800/80 border border-slate-border flex items-center justify-center flex-shrink-0 shadow-xl relative overflow-hidden backdrop-blur-md">
+                      {renderModelIcon(payload.modelName)}
                     </div>
-                  </div>
-                </motion.div>
-              </div>
+
+                    {/* Response Card content bubble (ChatGPT model response style) */}
+                    <div className="flex-1 glass-panel p-12 md:p-14 rounded-3xl rounded-bl-none border border-indigo-primary/20 shadow-[0_0_60px_hsla(var(--primary)/0.04)]">
+                      <div className="flex items-center gap-3 mb-4 border-b border-slate-border/30 pb-3">
+                        <span className="text-sm font-bold tracking-[0.2em] text-accent-amber uppercase font-sans">
+                          {payload.modelName || "AI Assistant"}
+                        </span>
+                        <span className="px-2 py-0.5 text-[10px] font-black rounded-md bg-indigo-primary/20 text-indigo-primary uppercase font-sans border border-indigo-primary/30">
+                          Response
+                        </span>
+                      </div>
+                      <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-relaxed text-slate-200 font-mono whitespace-pre-wrap">
+                        <div className="markdown-content inline-block">
+                          <ReactMarkdown
+                            components={{
+                              p: ({ children }) => <span className="inline">{children}</span>,
+                            }}
+                          >
+                            {typedResponse}
+                          </ReactMarkdown>
+                          {!isTypingComplete && <span className="typewriter-cursor" />}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
