@@ -61,35 +61,44 @@ graph TD
 - **Base Theme:** Deep Slate HSL palette configured in [globals.css](file:///Users/deakdavid/Documents/Portfolio/pertu-mi/src/app/globals.css).
 - **Markdown Rendering:** Supports rich formatting inside transcripts using `react-markdown`. Custom inline elements prevent layout breakage and keep typewriter cursors directly attached to text streams.
 - **Responsive Layout Design:**
-  - Content wraps at `max-w-6xl` for comfortable large-screen reading from a 1.5m speaker distance.
-  - Typography levels: Prompts scaled to `text-2xl md:text-3xl`, responses scaled to `text-xl sm:text-2xl md:text-3xl lg:text-4xl`.
+  - Content wraps at `max-w-[90vw]` for comfortable large-screen reading from a 1.5m speaker distance.
+  - Typography levels: Prompts scaled up to `text-5xl` (transitioning) and `text-3xl` (typing), responses scaled to `text-2xl` to `text-5xl`.
 
 ---
 
 ## ⚡ Recent Optimizations & Bug Fixes
 
-1. **Logo Corner Relocation & Overlap Prevention**
+1. **Seamless Presentation View & Shared Morphing**
+   - Merged `transitioning` (prompt intro) and `typing` states under a single parent layout container (`key="session"`) inside the `<AnimatePresence>` tree. This keeps the prompt card mounted during state changes.
+   - Added Framer Motion's physics-based spring `layout` prop to the prompt card `motion.div` to smoothly animate position, rounding, and padding shifts during state swaps.
+
+2. **Crossfading Text Sizing & Stretching Prevention**
+   - Separated the prompt card text into two distinct container divs (large-font intro and small-font minimized containers).
+   - Animated their opacities and translation offsets (`opacity` and `y` offsets) to crossfade smoothly over 0.4 seconds.
+   - Set the inactive container to `absolute` positioning, allowing the parent card bounding box to calculate height and width based solely on the active element.
+   - Applied `layout="position"` to the inner content wrapper and the text container motion nodes. This forces Framer Motion to counter-scale nested content, completely resolving stretching and squashing distortion of letters while the card container resizes.
+   - Removed conflicting CSS `transition-all duration-500` classes to prevent browser font reflow stutters.
+   - Aligned card width constraints to a matching `w-full max-w-[85%]` in both states to preserve text wrap boundaries.
+
+3. **Sequential Animation & Timer Offsets**
+   - Shortened the control panel transition timer delay from `3500ms` to `3000ms` (3 seconds), causing the large text to fade out and morph 500ms earlier.
+   - Introduced a `setTimeout` inside the projector's typewriter hook to delay printing by `500ms` after transitioning to the typing state.
+   - This sequential timing ensures the prompt card completes its resize and morph to the top-right corner *before* typewriter typing commences, creating a much cleaner, less busy visual path.
+
+4. **Static White ChatGPT SVG Asset**
+   - Modified `public/chatgpt.svg` to include a `fill='#FFFFFF'` path attribute, ensuring the brand logo displays in clean high-contrast white on the dark presenter screen.
+
+5. **Logo Corner Relocation & Overlap Prevention**
    - Active state brand logos are absolutely positioned in the upper-left corner (`absolute top-8 left-8 z-30`).
    - Content does not overlap or collide with branding graphics during presentation.
-2. **Clipping & Height Fixes**
-   - Removed screen height restriction (`overflow-hidden`) on the outer canvas page wrapper.
-   - Swapped `.projector-canvas` CSS rules to `overflow-y: auto` with hidden scrollbar styles.
-   - Wrapped active components inside a centering wrapper (`min-h-full py-24 px-6 md:px-12`) ensuring shorter pages center vertically while longer templates scroll comfortably.
-3. **Stable Character-Slicing Typewriter**
-   - Slices direct indices (`payload.responseText.slice(0, typedLength)`) instead of string accumulators, preventing eaten first letters on channel updates.
-4. **Static AI Brand Logos**
-   - Integrated custom static SVG/PNG files located under the `public/` directory:
-     - ChatGPT Logo: `/chatgpt.svg`
-     - Claude Logo: `/claude.svg`
-     - Gemini Logo: `/gemini.png`
 
 ---
 
 ## 🛠️ Commands & Quality Checks
 - `npm run dev` — Start the local development server.
-- `npm run lint` — Perform code linting checks (passes with 0 errors).
-- `npx tsc --noEmit` — Run TypeScript type audits (compiles with 0 errors).
-- `npm run build` — Compile Next.js production builds (succeeds successfully).
+- `npm run lint` — Perform code linting checks.
+- `npx tsc --noEmit` — Run TypeScript type audits.
+- `npm run build` — Compile Next.js production builds.
 
 ---
 
