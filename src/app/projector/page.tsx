@@ -203,9 +203,10 @@ export default function ProjectorPage() {
                       : "p-6 md:p-8 rounded-2xl rounded-br-none opacity-80"
                   }`}
                 >
-                  <div className="relative w-full">
+                  <motion.div layout="position" className="relative w-full">
                     {/* Large Intro Text (Transitioning State) */}
                     <motion.div
+                      layout="position"
                       initial={{ opacity: 0, y: -10 }}
                       animate={{
                         opacity: payload.state === "transitioning" ? 1 : 0,
@@ -224,6 +225,7 @@ export default function ProjectorPage() {
 
                     {/* Small Minimized Text (Typing State) */}
                     <motion.div
+                      layout="position"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{
                         opacity: payload.state === "typing" ? 1 : 0,
@@ -239,7 +241,7 @@ export default function ProjectorPage() {
                         {payload.promptText || "No prompt text provided."}
                       </p>
                     </motion.div>
-                  </div>
+                  </motion.div>
                 </motion.div>
               </div>
 
