@@ -51,7 +51,7 @@ body {
 .projector-canvas {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none;  /* IE and Edge */
-  overflow: hidden;
+  overflow-y: auto;
 }
 .projector-canvas::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
