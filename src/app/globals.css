@@ -143,9 +143,6 @@ body {
 .markdown-content p:last-child {
   margin-bottom: 0;
 }
-.markdown-content span {
-  white-space: pre-line;
-}
 .markdown-content strong {
   color: white;
   font-weight: 800;

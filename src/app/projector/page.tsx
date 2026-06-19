@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, isValidElement, cloneElement, ReactNode, ReactElement } from "react";
 import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePodcastChannel } from "@/hooks/usePodcastChannel";
@@ -29,6 +29,48 @@ function renderModelIcon(modelName?: string) {
   return <RobotIcon />;
 }
 
+function injectCursor(children: ReactNode, isTypingComplete: boolean): ReactNode {
+  if (isTypingComplete) return children;
+
+  if (typeof children === "string") {
+    if (children.includes("[CURSOR]")) {
+      const parts = children.split("[CURSOR]");
+      return (
+        <>
+          {parts[0]}
+          <span className="typewriter-cursor" />
+          {parts[1]}
+        </>
+      );
+    }
+    return children;
+  }
+
+  if (Array.isArray(children)) {
+    const newChildren = [...children];
+    for (let i = newChildren.length - 1; i >= 0; i--) {
+      const child = newChildren[i];
+      const result = injectCursor(child, isTypingComplete);
+      if (result !== child) {
+        newChildren[i] = result;
+        return newChildren;
+      }
+    }
+    return children;
+  }
+
+  if (isValidElement(children)) {
+    const element = children as ReactElement<{ children?: ReactNode }>;
+    if (element.props && "children" in element.props) {
+      return cloneElement(element, {
+        children: injectCursor(element.props.children, isTypingComplete),
+      });
+    }
+  }
+
+  return children;
+}
+
 export default function ProjectorPage() {
   const [payload, setPayload] = useState<BroadcastPayload>({
     state: "idle",
@@ -43,6 +85,7 @@ export default function ProjectorPage() {
   // Compute sliced text for presentation
   const typedResponse = (payload.responseText || "").slice(0, typedLength);
   const isTypingComplete = typedLength >= (payload.responseText || "").length;
+  const typedResponseWithCursor = isTypingComplete ? typedResponse : typedResponse + "[CURSOR]";
 
   // Listen to the shared broadcast channel
   usePodcastChannel((data) => {
@@ -307,15 +350,18 @@ export default function ProjectorPage() {
                         </span>
                       </div>
                       <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-snug text-slate-200 font-mono whitespace-pre-wrap">
-                        <div className="markdown-content inline-block">
+                        <div className="markdown-content inline-block w-full">
                           <ReactMarkdown
                             components={{
-                              p: ({ children }) => <span className="inline">{children}</span>,
+                              p: ({ children }) => <p className="mb-2 last:mb-0">{injectCursor(children, isTypingComplete)}</p>,
+                              li: ({ children }) => <li className="mb-1 last:mb-0">{injectCursor(children, isTypingComplete)}</li>,
+                              h1: ({ children }) => <h1 className="text-3xl font-bold my-2">{injectCursor(children, isTypingComplete)}</h1>,
+                              h2: ({ children }) => <h2 className="text-2xl font-bold my-2">{injectCursor(children, isTypingComplete)}</h2>,
+                              h3: ({ children }) => <h3 className="text-xl font-bold my-2">{injectCursor(children, isTypingComplete)}</h3>,
                             }}
                           >
-                            {typedResponse}
+                            {typedResponseWithCursor}
                           </ReactMarkdown>
-                          {!isTypingComplete && <span className="typewriter-cursor" />}
                         </div>
                       </div>
                     </div>
