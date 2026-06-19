@@ -66,12 +66,36 @@ export default function ControlPage() {
 
     const modelName = selectedModel === "Other" ? customModelName : selectedModel;
 
+    const cleanText = (text: string) => {
+      const lines = text.split("\n").map((line) => line.trim().replace(/[ \t]+/g, " "));
+      const cleanedLines: string[] = [];
+      let isPreviousLineEmpty = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line === "") {
+          if (!isPreviousLineEmpty && i > 0 && i < lines.length - 1) {
+            cleanedLines.push("");
+            isPreviousLineEmpty = true;
+          }
+        } else {
+          cleanedLines.push(line);
+          isPreviousLineEmpty = false;
+        }
+      }
+
+      return cleanedLines.join("\n");
+    };
+
+    const cleanPrompt = cleanText(promptText);
+    const cleanResponse = cleanText(responseText);
+
     // 1. Instantly trigger prompt transition state
     setBroadcastState("transitioning");
     broadcast({
       state: "transitioning",
-      promptText,
-      responseText,
+      promptText: cleanPrompt,
+      responseText: cleanResponse,
       modelName,
     });
 
@@ -80,8 +104,8 @@ export default function ControlPage() {
       setBroadcastState("typing");
       broadcast({
         state: "typing",
-        promptText,
-        responseText,
+        promptText: cleanPrompt,
+        responseText: cleanResponse,
         modelName,
       });
       timerRef.current = null;

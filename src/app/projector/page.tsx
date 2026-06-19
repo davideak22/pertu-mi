@@ -46,7 +46,31 @@ export default function ProjectorPage() {
 
   // Listen to the shared broadcast channel
   usePodcastChannel((data) => {
-    setPayload(data);
+    const cleanText = (text: string) => {
+      const lines = text.split("\n").map((line) => line.trim().replace(/[ \t]+/g, " "));
+      const cleanedLines: string[] = [];
+      let isPreviousLineEmpty = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line === "") {
+          if (!isPreviousLineEmpty && i > 0 && i < lines.length - 1) {
+            cleanedLines.push("");
+            isPreviousLineEmpty = true;
+          }
+        } else {
+          cleanedLines.push(line);
+          isPreviousLineEmpty = false;
+        }
+      }
+
+      return cleanedLines.join("\n");
+    };
+    setPayload({
+      ...data,
+      promptText: cleanText(data.promptText || ""),
+      responseText: cleanText(data.responseText || ""),
+    });
     setTypedLength(0); // Reset typed count on new broadcast receipt
   });
 
@@ -282,7 +306,7 @@ export default function ProjectorPage() {
                           Response
                         </span>
                       </div>
-                      <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-relaxed text-slate-200 font-mono whitespace-pre-wrap">
+                      <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-snug text-slate-200 font-mono whitespace-pre-wrap">
                         <div className="markdown-content inline-block">
                           <ReactMarkdown
                             components={{
