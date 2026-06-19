@@ -197,15 +197,15 @@ export default function ProjectorPage() {
                 <motion.div
                   layout
                   transition={{ type: "spring", stiffness: 85, damping: 17 }}
-                  className={`glass-panel border border-slate-border shadow-2xl transition-all duration-500 ${
+                  className={`glass-panel border border-slate-border shadow-2xl w-full max-w-[85%] ${
                     payload.state === "transitioning"
-                      ? "p-10 md:p-12 rounded-3xl rounded-br-none max-w-[85%] w-full"
-                      : "p-6 md:p-8 rounded-2xl rounded-br-none opacity-80 max-w-[85%]"
+                      ? "p-10 md:p-12 rounded-3xl rounded-br-none"
+                      : "p-6 md:p-8 rounded-2xl rounded-br-none opacity-80"
                   }`}
                 >
                   <motion.span
                     layout
-                    className={`font-bold tracking-[0.2em] uppercase block mb-2 font-sans transition-all duration-500 ${
+                    className={`font-bold tracking-[0.2em] uppercase block mb-2 font-sans ${
                       payload.state === "transitioning"
                         ? "text-sm md:text-base text-indigo-primary"
                         : "text-xs text-slate-muted"
@@ -215,7 +215,7 @@ export default function ProjectorPage() {
                   </motion.span>
                   <motion.p
                     layout
-                    className={`font-extrabold text-white leading-snug font-sans transition-all duration-500 ${
+                    className={`font-extrabold text-white leading-snug font-sans ${
                       payload.state === "transitioning"
                         ? "text-5xl sm:text-6xl md:text-7xl lg:text-8xl"
                         : "text-3xl sm:text-4xl md:text-5xl"

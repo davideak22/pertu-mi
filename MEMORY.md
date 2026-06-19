@@ -46,6 +46,7 @@ This document tracks the current active phase, goals, and complete progress chec
 - **2026-06-19**: Widened presenter canvas container widths to `90vw` and card limits to `85%`. Scaled up typography levels to allow larger text to appear. Added character-length checks to automatically hide the blinking typewriter cursor once printing completes. Combined the transitioning and typing presentation states into a single persistent session layout with Framer Motion layout morphing, creating a fluid, seamless animation path. Run compilation checks successfully.
 - **2026-06-19**: Enabled Framer Motion `<motion.span layout>` and `<motion.p layout>` projection elements inside the prompt card to interpolate text dimensions smoothly during layout state swaps. Extended the transitioning state auto-timer delay inside the operator panel control code from 1.5 seconds to 3.5 seconds.
 - **2026-06-19**: Updated the static vector asset `public/chatgpt.svg` with a white fill path attribute, ensuring the brand logo renders in clean high-contrast white on the dark presenter screen.
+- **2026-06-19**: Aligned the prompt card width limits to a constant `w-full max-w-[85%]` across transitioning/typing modes and stripped away conflicting `transition-all duration-500` CSS classes. This prevents character wrapping reflow jumps and stutters by delegating all container layout scaling directly to Framer Motion.
 
 
 
