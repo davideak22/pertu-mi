@@ -1,65 +1,78 @@
+import Link from "next/link";
 import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="relative flex flex-col items-center justify-center flex-1 min-h-screen px-6 py-24 overflow-hidden bg-bg-deep text-foreground">
+      {/* Premium ambient glow background */}
+      <div className="glow-backdrop" />
+
+      <div className="relative z-10 w-full max-w-4xl mx-auto text-center flex flex-col items-center">
+        {/* Animated Brand Header */}
+        <div className="mb-6 hover:scale-[1.02] transition-transform duration-300">
+          <Image
+            src="/logo.png"
+            alt="Pertu MI Logo"
+            width={280}
+            height={100}
+            priority
+            className="object-contain"
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <p className="max-w-2xl mx-auto text-lg sm:text-xl text-slate-muted mb-12">
+          Local-first, zero-config multi-screen display system for live podcast operators.
+        </p>
+
+        {/* Dual Mode Cards Grid */}
+        <div className="grid gap-8 md:grid-cols-2 max-w-3xl mx-auto text-left">
+          {/* Operator Panel Card */}
+          <Link
+            href="/control"
+            className="group block relative p-8 rounded-2xl glass-panel border border-slate-border hover:border-indigo-primary/40 transition-all duration-300 hover:shadow-[0_0_30px_hsla(var(--primary)/0.15)]"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <div className="flex items-center gap-4 mb-4">
+              <span className="flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-primary/10 text-indigo-primary font-bold text-lg border border-indigo-primary/20 group-hover:scale-105 transition-transform">
+                🎛️
+              </span>
+              <h2 className="text-xl font-bold group-hover:text-indigo-primary transition-colors font-sans">
+                Operator Dashboard
+              </h2>
+            </div>
+            <p className="text-slate-muted leading-relaxed font-sans">
+              Open on the host laptop. Type prompts, responses, and click broadcast to dynamically update the presenter view.
+            </p>
+            <div className="mt-6 flex items-center text-sm font-semibold text-indigo-primary group-hover:translate-x-1 transition-transform">
+              Launch Control Panel &rarr;
+            </div>
+          </Link>
+
+          {/* Projector View Card */}
+          <Link
+            href="/projector"
+            className="group block relative p-8 rounded-2xl glass-panel border border-slate-border hover:border-accent-amber/40 transition-all duration-300 hover:shadow-[0_0_30px_hsla(var(--accent)/0.15)]"
           >
-            Documentation
-          </a>
+            <div className="flex items-center gap-4 mb-4">
+              <span className="flex items-center justify-center w-12 h-12 rounded-xl bg-accent-amber/10 text-accent-amber font-bold text-lg border border-accent-amber/20 group-hover:scale-105 transition-transform">
+                📺
+              </span>
+              <h2 className="text-xl font-bold group-hover:text-accent-amber transition-colors font-sans">
+                Presenter Canvas
+              </h2>
+            </div>
+            <p className="text-slate-muted leading-relaxed font-sans">
+              Open on the guest monitor or projector screen. Displays floating logos, wipes prompts, and types out responses.
+            </p>
+            <div className="mt-6 flex items-center text-sm font-semibold text-accent-amber group-hover:translate-x-1 transition-transform">
+              Launch Presenter Screen &rarr;
+            </div>
+          </Link>
         </div>
-      </main>
-    </div>
+
+        {/* Footer */}
+        <footer className="mt-20 text-sm text-slate-muted/60 font-sans">
+          Pertu MI &bull; Offline-first local memory sync
+        </footer>
+      </div>
+    </main>
   );
 }

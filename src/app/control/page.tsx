@@ -1,0 +1,191 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePodcastChannel } from "@/hooks/usePodcastChannel";
+import { SystemState } from "@/types";
+
+export default function ControlPage() {
+  const [promptText, setPromptText] = useState("");
+  const [responseText, setResponseText] = useState("");
+  const [broadcastState, setBroadcastState] = useState<SystemState>("idle");
+  
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Initialize the sync hook for broadcasting
+  const { broadcast } = usePodcastChannel();
+
+  // Clear timers on component unmount to prevent leaks
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  const handleBroadcast = () => {
+    // Prevent overlapping timers if clicked repeatedly
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // 1. Instantly trigger prompt transition state
+    setBroadcastState("transitioning");
+    broadcast({
+      state: "transitioning",
+      promptText,
+      responseText,
+    });
+
+    // 2. Set timer to automatically transition to typewriter typing state after 1500ms
+    timerRef.current = setTimeout(() => {
+      setBroadcastState("typing");
+      broadcast({
+        state: "typing",
+        promptText,
+        responseText,
+      });
+      timerRef.current = null;
+    }, 1500);
+  };
+
+  const handleReset = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // Return projector and control dashboard to stand-by idle state
+    setBroadcastState("idle");
+    setPromptText("");
+    setResponseText("");
+    broadcast({
+      state: "idle",
+      promptText: "",
+      responseText: "",
+    });
+  };
+
+  return (
+    <main className="relative flex flex-col min-h-screen bg-bg-deep text-foreground font-sans">
+      <div className="glow-backdrop" />
+
+      {/* Navigation Header */}
+      <header className="relative z-10 flex items-center justify-between px-8 py-4 border-b border-slate-border glass-panel">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="hover:opacity-80 transition-opacity">
+            <Image
+              src="/logo.png"
+              alt="Pertu MI Logo"
+              width={100}
+              height={30}
+              className="h-8 w-auto object-contain"
+              priority
+            />
+          </Link>
+          <span className="px-2 py-0.5 text-xs font-semibold rounded bg-slate-border text-slate-muted font-sans">
+            Host Control
+          </span>
+        </div>
+        <Link href="/projector" target="_blank" className="text-sm font-medium text-slate-muted hover:text-white transition-colors font-sans">
+          Open Presenter Screen ↗
+        </Link>
+      </header>
+
+      {/* Main Panel Content */}
+      <section className="relative z-10 flex-1 grid gap-8 p-8 md:grid-cols-3 max-w-7xl mx-auto w-full">
+        {/* Left and Middle columns: Control Inputs */}
+        <div className="md:col-span-2 flex flex-col gap-6">
+          <div className="p-6 rounded-2xl border border-slate-border bg-slate-panel/50 glass-panel">
+            <h2 className="text-lg font-bold mb-4 text-white font-sans">Broadcast Inputs</h2>
+            <div className="flex flex-col gap-5">
+              {/* Prompt input field */}
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold tracking-wider uppercase text-slate-muted font-sans">
+                  Prompt Text
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Why is native browser memory sync faster than WebSockets?"
+                  value={promptText}
+                  onChange={(e) => setPromptText(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-slate-border bg-bg-deep text-white placeholder-slate-muted/50 focus:outline-none focus:border-indigo-primary focus:ring-1 focus:ring-indigo-primary transition-all font-sans"
+                />
+              </div>
+
+              {/* Response text area */}
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold tracking-wider uppercase text-slate-muted font-sans">
+                  Response Text
+                </label>
+                <textarea
+                  rows={6}
+                  placeholder="e.g. It operates on the browser's local memory bus instead of traversing the TCP/IP stack or requesting external network servers..."
+                  value={responseText}
+                  onChange={(e) => setResponseText(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-slate-border bg-bg-deep text-white placeholder-slate-muted/50 focus:outline-none focus:border-indigo-primary focus:ring-1 focus:ring-indigo-primary transition-all font-mono resize-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Trigger Buttons */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBroadcast}
+              className="flex-1 px-6 py-4 rounded-xl font-bold text-center btn-primary cursor-pointer font-sans"
+            >
+              🚀 Broadcast Stream
+            </button>
+            <button
+              onClick={handleReset}
+              className="px-6 py-4 rounded-xl font-semibold btn-secondary cursor-pointer font-sans"
+            >
+              🔄 Reset to Standby
+            </button>
+          </div>
+        </div>
+
+        {/* Right column: Status Monitor */}
+        <div className="flex flex-col gap-6">
+          <div className="p-6 rounded-2xl border border-slate-border bg-slate-panel/50 glass-panel flex-1 flex flex-col">
+            <h2 className="text-lg font-bold mb-4 text-white font-sans">System Status</h2>
+            
+            <div className="flex-1 flex flex-col justify-between">
+              {/* Broadcast Channel Status Indicator */}
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-bg-deep border border-slate-border">
+                  <span className="text-sm text-slate-muted font-sans">Local Sync Bus</span>
+                  <span className="flex items-center gap-2 text-xs font-semibold text-emerald-400 font-sans">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    CONNECTED
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg bg-bg-deep border border-slate-border">
+                  <span className="text-sm text-slate-muted font-sans">Active State</span>
+                  <span className={`px-2 py-0.5 text-xs font-bold rounded uppercase font-sans ${
+                    broadcastState === "idle" ? "bg-slate-700 text-slate-muted" :
+                    broadcastState === "transitioning" ? "bg-indigo-primary/20 text-indigo-primary" :
+                    "bg-accent-amber/20 text-accent-amber"
+                  }`}>
+                    {broadcastState}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status information info */}
+              <div className="mt-8 p-4 rounded-lg bg-indigo-primary/5 border border-indigo-primary/10 text-xs text-slate-muted leading-relaxed font-sans">
+                <span className="font-bold text-indigo-primary block mb-1">Local Memory Bus</span>
+                This panel is connected to the single-origin `BroadcastChannel` line. Updates sync to the presenter display tab in near-zero latency (&lt; 2ms).
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
