@@ -1,4 +1,4 @@
-# Testing & Verification Strategy
+w# Testing & Verification Strategy
 
 This document outlines the testing protocols, environments, manual checklists, and automated gates for the project.
 
@@ -7,6 +7,7 @@ This document outlines the testing protocols, environments, manual checklists, a
 ## 🤖 Automated Testing Frameworks
 
 ### 1. Unit & Hook Testing
+
 - **Tool**: **Vitest** + **React Testing Library**
 - **Purpose**: Test state updates, payload conversions, and unmount cleanups in the `usePodcastChannel` custom hook.
 - **Verification Criteria**:
@@ -15,6 +16,7 @@ This document outlines the testing protocols, environments, manual checklists, a
   - Broadcast functions output correctly-formed payloads.
 
 ### 2. End-to-End (E2E) Synchronization Testing
+
 - **Tool**: **Playwright**
 - **Purpose**: Automate dual-screen browser instances to check synchronization flow from `/control` to `/projector`.
 - **Verification Criteria**:
@@ -25,6 +27,7 @@ This document outlines the testing protocols, environments, manual checklists, a
 ---
 
 ## 📺 Manual Studio Verification Checklist
+
 Since this application runs in physical studio environments on multiple monitors, manual verification is critical:
 
 - **Fullscreen presentation check**:
@@ -45,6 +48,7 @@ Since this application runs in physical studio environments on multiple monitors
 ---
 
 ## 🔄 Verification & Pre-Commit Loop
+
 Configure automated checks before commits are finalized:
 
 - **Pre-commit script**:

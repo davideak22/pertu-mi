@@ -99,6 +99,17 @@ export default function ControlPage() {
       modelName,
     });
 
+    // 1b. Fire-and-forget: persist Q&A to local filesystem
+    fetch("/api/save-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        promptText: cleanPrompt,
+        responseText: cleanResponse,
+        modelName,
+      }),
+    }).catch((err) => console.error("Failed to save session:", err));
+
     // 2. Set timer to automatically transition to typewriter typing state after 3500ms (3.5 seconds)
     timerRef.current = setTimeout(() => {
       setBroadcastState("typing");
